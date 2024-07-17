@@ -4,6 +4,8 @@ import cors from 'cors';
 import { useReadImage } from '@/hooks/useReadImage';
 import { SERVER_PORT } from '@/config';
 import { useListenToChannel } from '@/hooks/useListenToChannel';
+import { useMakeBet } from './hooks/useMakeBet';
+import { useStartBrowserSession } from './hooks/useStartBrowserSession';
 
 async function startServer() {
   const app = express();
@@ -27,6 +29,10 @@ async function startServer() {
       }
     }
   });
+
+  const { driver } = await useStartBrowserSession();
+
+  useMakeBet(driver, async () => {});
 
   app.listen(PORT, () => console.log(`Server running on port ${PORT}...`));
 }
