@@ -5,7 +5,6 @@ import { useReadImage } from '@/hooks/useReadImage';
 import { SERVER_PORT } from '@/config';
 import { useListenToChannel } from '@/hooks/useListenToChannel';
 import { useMakeBet } from './hooks/useMakeBet';
-import { useStartBrowserSession } from './hooks/useStartBrowserSession';
 
 async function startServer() {
   const app = express();
@@ -20,19 +19,14 @@ async function startServer() {
     res.sendFile(path.join(__publicPath, 'index.html'));
   });
 
-  useListenToChannel(async ({ message, media }) => {
-    console.log('Message:', message);
+  useListenToChannel(async ({ media }) => {
     if (media) {
-      const text = await useReadImage(media);
-      if (text) {
-        console.log(text);
+      const { winner, map } = await useReadImage(media);
+      if (winner && map) {
+        useMakeBet({ winner, map });
       }
     }
   });
-
-  const { driver } = await useStartBrowserSession();
-
-  useMakeBet(driver, async () => {});
 
   app.listen(PORT, () => console.log(`Server running on port ${PORT}...`));
 }
