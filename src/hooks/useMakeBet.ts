@@ -5,6 +5,7 @@ import { By, until } from 'selenium-webdriver';
 import { findDivRoleButton } from '@/hooks/findDivRoleButton';
 import { findSecondTeam } from '@/hooks/findSecondTeam';
 import { getWinnerIndex } from './getWinnerIndex';
+import fs from 'fs';
 
 export const useMakeBet = async ({
   winner,
@@ -14,7 +15,11 @@ export const useMakeBet = async ({
   map: number;
 }) => {
   const service = new Chrome.ServiceBuilder().build();
-  const options = new Chrome.Options();
+  const options = new Chrome.Options()
+    .addArguments('headless')
+    .addArguments('disable-gpu')
+    .addArguments('window-size=1920,1080');
+
   const driver = Chrome.Driver.createSession(options, service);
 
   try {
@@ -138,13 +143,15 @@ export const useMakeBet = async ({
       await setTimeout(2000);
 
       const makeBetButton = await driver.wait(
-        until.elementLocated(By.xpath('//button[text()="Заключить"]')),
+        until.elementLocated(By.xpath('//button[text()="Пополнить"]')),
         10000
       );
 
       await driver.wait(until.elementIsVisible(makeBetButton), 10000);
 
       makeBetButton.click();
+
+      console.log('bet has been made!');
     }
   } catch (error) {
     console.error('Ошибка при выполнении ставки:', error);

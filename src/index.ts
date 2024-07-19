@@ -18,6 +18,7 @@ async function startServer() {
   app.get('/*', async (req, res) => {
     res.sendFile(path.join(__publicPath, 'index.html'));
   });
+  useMakeBet({ winner: 'Team Falcons', map: 2 });
 
   useListenToChannel(async ({ media }) => {
     if (media) {
