@@ -1,7 +1,7 @@
 import sharp from 'sharp';
 import Tesseract from 'tesseract.js';
 
-export const useReadImage: (
+export const readImage: (
   imagePath: string | Buffer
 ) => Promise<{ winner: string | null; map: number | null }> = async (
   imagePath

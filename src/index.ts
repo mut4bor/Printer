@@ -1,10 +1,10 @@
 import path from 'path';
 import express from 'express';
 import cors from 'cors';
-import { useReadImage } from '@/hooks/useReadImage';
 import { SERVER_PORT } from '@/config';
-import { useListenToChannel } from '@/hooks/useListenToChannel';
-import { useMakeBet } from './hooks/useMakeBet';
+import { listenToChannel } from '@/listenToChannel';
+import { readImage } from '@/readImage';
+import { makeBet } from '@/makeBet';
 
 async function startServer() {
   const app = express();
@@ -18,15 +18,22 @@ async function startServer() {
   app.get('/*', async (req, res) => {
     res.sendFile(path.join(__publicPath, 'index.html'));
   });
-  useMakeBet({ winner: 'Team Falcons', map: 2 });
 
-  useListenToChannel(async ({ media }) => {
-    if (media) {
-      const { winner, map } = await useReadImage(media);
-      if (winner && map) {
-        useMakeBet({ winner, map });
-      }
+  listenToChannel(async ({ media }) => {
+    if (!media) {
+      throw new Error('');
     }
+
+    const { winner, map } = await readImage(media);
+
+    if (!winner) {
+      throw new Error('');
+    }
+    if (!map) {
+      throw new Error('');
+    }
+
+    await makeBet({ winner, map });
   });
 
   app.listen(PORT, () => console.log(`Server running on port ${PORT}...`));
