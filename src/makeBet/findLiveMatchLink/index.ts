@@ -1,6 +1,6 @@
 import { By, WebElement } from 'selenium-webdriver';
 
-export const findDivRoleButton = async (
+export const findLiveMatchLink = async (
   element: WebElement
 ): Promise<WebElement | null> => {
   try {
@@ -14,7 +14,7 @@ export const findDivRoleButton = async (
           return divRoleButton;
         }
       } catch (err) {
-        return findDivRoleButton(parent);
+        return findLiveMatchLink(parent);
       }
     }
   } catch (err) {

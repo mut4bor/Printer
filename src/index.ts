@@ -14,6 +14,21 @@ import { makeBet } from '@/makeBet';
 import { StringSession } from 'telegram/sessions';
 import { createTelegramClient } from './createTelegramClient';
 import { Api } from 'telegram';
+import { CustomFile } from 'telegram/client/uploads';
+import fs from 'fs';
+
+async function saveBase64ToFile(base64: string, filepath: string) {
+  return new Promise((resolve, reject) => {
+    const buffer = Buffer.from(base64, 'base64');
+    fs.writeFile(filepath, buffer, (err) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(filepath);
+      }
+    });
+  });
+}
 
 async function startServer() {
   const app = express();
@@ -31,6 +46,7 @@ async function startServer() {
   const stringSession = new StringSession(TELEGRAM_ERROR_SESSION);
   const { client } = createTelegramClient(stringSession);
 
+  const filePath = './temp_image.jpg';
   listenToChannel(async ({ media }) => {
     await client.connect();
     if (!media) return;
@@ -39,14 +55,27 @@ async function startServer() {
 
     if (!winner || !map) return;
 
-    const { message } = await makeBet({ winner, map });
+    const { message, screenshot } = await makeBet({ winner, map });
+
+    await saveBase64ToFile(screenshot, filePath);
 
     await client.invoke(
-      new Api.messages.SendMessage({
+      new Api.messages.SendMedia({
         peer: TELEGRAM_ERROR_CHANNEL_LINK,
+        media: new Api.InputMediaUploadedPhoto({
+          file: await client.uploadFile({
+            file: new CustomFile(
+              filePath,
+              fs.statSync(filePath).size,
+              filePath
+            ),
+            workers: 1,
+          }),
+        }),
         message: message,
       })
     );
+    fs.unlinkSync(filePath);
   });
 
   app.listen(PORT, () => console.log(`Server running on port ${PORT}...`));

@@ -6,10 +6,11 @@ import { addCookies } from './addCookies';
 import { locateElement } from './locateElement';
 import { findLoserTeam } from './findLoserTeam';
 import { getWinnerIndex } from './getWinnerIndex';
-import { findDivRoleButton } from './findDivRoleButton';
+import { findLiveMatchLink } from './findLiveMatchLink';
 import { getBalance } from './getBalance';
 import { manageError } from './manageError';
 import { BetResult } from './types';
+import { makeScreenshot } from './makeScreenshot';
 
 export const makeBet = async ({
   winner,
@@ -34,7 +35,7 @@ export const makeBet = async ({
     });
 
     if (!liveButton) {
-      return manageError('Live button not found');
+      return manageError({ driver, errorText: 'Live button not found' });
     }
 
     await setTimeout(2000);
@@ -46,13 +47,19 @@ export const makeBet = async ({
     });
 
     if (!winnerSpan) {
-      return manageError('Winner not found on live page');
+      return manageError({
+        driver,
+        errorText: 'Winner not found on live page',
+      });
     }
 
     const winnerSpanClassName = await winnerSpan.getAttribute('class');
 
     if (!winnerSpanClassName) {
-      return manageError('Winner class name not found on live page');
+      return manageError({
+        driver,
+        errorText: 'Winner class name not found on live page',
+      });
     }
 
     const loserTeamSpan = await findLoserTeam({
@@ -61,13 +68,16 @@ export const makeBet = async ({
     });
 
     if (!loserTeamSpan) {
-      return manageError('Loser team not found on live page');
+      return manageError({
+        driver,
+        errorText: 'Loser team not found on live page',
+      });
     }
 
     const loserTeamName = await loserTeamSpan.getText();
 
     if (!loserTeamName) {
-      return manageError('Loser team name not found');
+      return manageError({ driver, errorText: 'Loser team name not found' });
     }
 
     const winnerIndex = await getWinnerIndex({
@@ -77,10 +87,14 @@ export const makeBet = async ({
       spanClassName: winnerSpanClassName,
     });
 
-    const liveMatchLink = await findDivRoleButton(winnerSpan);
+    if (!winnerIndex) {
+      return manageError({ driver, errorText: 'Winner index not found' });
+    }
+
+    const liveMatchLink = await findLiveMatchLink(winnerSpan);
 
     if (!liveMatchLink) {
-      return manageError('Live match link not found');
+      return manageError({ driver, errorText: 'Live match link not found' });
     }
 
     await setTimeout(2000);
@@ -95,7 +109,7 @@ export const makeBet = async ({
     });
 
     if (!mapPickButton) {
-      return manageError('Map pick button not found');
+      return manageError({ driver, errorText: 'Map pick button not found' });
     }
 
     await setTimeout(1000);
@@ -107,7 +121,10 @@ export const makeBet = async ({
     });
 
     if (!matchResultSection) {
-      return manageError('Match result section not found');
+      return manageError({
+        driver,
+        errorText: 'Match result section not found',
+      });
     }
 
     const winnerButton = await matchResultSection.findElement(
@@ -123,7 +140,10 @@ export const makeBet = async ({
     });
 
     if (!betInputContainer) {
-      return manageError('Bet input container not found');
+      return manageError({
+        driver,
+        errorText: 'Bet input container not found',
+      });
     }
 
     const betInput = await betInputContainer.findElement(By.xpath('.//input'));
@@ -131,37 +151,46 @@ export const makeBet = async ({
     const balance = await getBalance(driver);
 
     if (!balance) {
-      return manageError('Balance not found');
+      return manageError({ driver, errorText: 'Balance not found' });
     }
 
     if (balance < 10) {
-      return manageError('Balance is below 10 rubles');
+      return manageError({ driver, errorText: 'Balance is below 10 rubles' });
     }
 
-    const betAmount = Math.max(balance * 0.05, 10);
+    const betAmount = Math.round(Math.max(balance * 0.05, 10));
 
     await betInput.sendKeys(betAmount);
 
     const makeBetButton = await locateElement({
       driver,
-      xpath: '//button[text()="Заключить"]',
+      xpath: '//button[text()="ЗаключитьЗаключить"]',
     });
 
     if (!makeBetButton) {
-      return manageError('Make bet button not found');
+      return manageError({ driver, errorText: 'Make bet button not found' });
     }
 
     makeBetButton.click();
 
+    const { screenshot } = await makeScreenshot(driver);
+
     return {
       success: true,
+      screenshot: screenshot,
       message: `Ставка сделана: ${winner} против ${loserTeamName} ${map} карта (Исход: ${winner}) \n Текущий баланс: ${balance - betAmount}`,
     };
   } catch (error) {
+    const { screenshot } = await makeScreenshot(driver);
     return error instanceof Error
-      ? { success: false, message: `Произошла ошибка: ${error.message}` }
+      ? {
+          success: false,
+          screenshot: screenshot,
+          message: `Произошла ошибка: ${error.message}`,
+        }
       : {
           success: false,
+          screenshot: screenshot,
           message: `Произошла неизвестная ошибка: ${error}`,
         };
   } finally {

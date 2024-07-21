@@ -9,23 +9,20 @@ export const getBalance = async (driver: WebDriver): Promise<number | null> => {
         '//p[@class="Text-sc-1bwg3nr-0 DesktopBalance__BalanceAmount-sc-15xoz6u-4 leytvg edfVDs"]',
     });
 
-    if (balance) {
-      const balanceText = await balance.getText();
-
-      const cleanedBalanceText = balanceText
-        .replace(/\s/g, '')
-        .replace('₽', '');
-
-      const parsedCleanedBalanceText = parseInt(cleanedBalanceText, 10);
-
-      if (isNaN(parsedCleanedBalanceText)) {
-        return null;
-      }
-
-      return parsedCleanedBalanceText;
-    } else {
-      throw new Error('Balance element not found');
+    if (!balance) {
+      return null;
     }
+    const balanceText = await balance.getText();
+
+    const cleanedBalanceText = balanceText.replace(/\s/g, '').replace('₽', '');
+
+    const parsedCleanedBalanceText = parseInt(cleanedBalanceText);
+
+    if (isNaN(parsedCleanedBalanceText)) {
+      return null;
+    }
+
+    return parsedCleanedBalanceText;
   } catch (error) {
     console.error('Error getting balance:', error);
     return null;
