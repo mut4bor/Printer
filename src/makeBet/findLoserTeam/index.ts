@@ -1,6 +1,6 @@
 import { By, WebElement } from 'selenium-webdriver';
 
-export const findSecondTeam = async ({
+export const findLoserTeam = async ({
   element,
   winnerSpan,
 }: {
@@ -15,15 +15,13 @@ export const findSecondTeam = async ({
 
     if (parent) {
       try {
-        const secondTeamName = await parent.findElement(
-          By.xpath(xpathExpression)
-        );
+        const loserTeam = await parent.findElement(By.xpath(xpathExpression));
 
-        if (secondTeamName) {
-          return secondTeamName;
+        if (loserTeam) {
+          return loserTeam;
         }
       } catch (err) {
-        return findSecondTeam({ element: parent, winnerSpan });
+        return findLoserTeam({ element: parent, winnerSpan });
       }
     }
   } catch (err) {

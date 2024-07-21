@@ -9,10 +9,14 @@ export const locateElement = async ({
   xpath: string;
   timeout?: number;
 }): Promise<WebElement | null> => {
-  const element = await driver.wait(
-    until.elementLocated(By.xpath(xpath)),
-    timeout
-  );
-  await driver.wait(until.elementIsVisible(element), timeout);
-  return element;
+  try {
+    const element = await driver.wait(
+      until.elementLocated(By.xpath(xpath)),
+      timeout
+    );
+    await driver.wait(until.elementIsVisible(element), timeout);
+    return element;
+  } catch (error) {
+    return null;
+  }
 };

@@ -1,10 +1,19 @@
 import path from 'path';
 import express from 'express';
 import cors from 'cors';
-import { SERVER_PORT } from '@/config';
+import {
+  SERVER_PORT,
+  TELEGRAM_ERROR_CHANNEL_LINK,
+  TELEGRAM_ERROR_SESSION,
+  TELEGRAM_PASSWORD,
+  TELEGRAM_PHONE_NUMBER,
+} from '@/config';
 import { listenToChannel } from '@/listenToChannel';
 import { readImage } from '@/readImage';
 import { makeBet } from '@/makeBet';
+import { StringSession } from 'telegram/sessions';
+import { createTelegramClient } from './createTelegramClient';
+import { Api } from 'telegram';
 
 async function startServer() {
   const app = express();
@@ -19,21 +28,25 @@ async function startServer() {
     res.sendFile(path.join(__publicPath, 'index.html'));
   });
 
+  const stringSession = new StringSession(TELEGRAM_ERROR_SESSION);
+  const { client } = createTelegramClient(stringSession);
+
   listenToChannel(async ({ media }) => {
-    if (!media) {
-      throw new Error('');
-    }
+    await client.connect();
+    if (!media) return;
 
     const { winner, map } = await readImage(media);
 
-    if (!winner) {
-      throw new Error('');
-    }
-    if (!map) {
-      throw new Error('');
-    }
+    if (!winner || !map) return;
 
-    await makeBet({ winner, map });
+    const { message } = await makeBet({ winner, map });
+
+    await client.invoke(
+      new Api.messages.SendMessage({
+        peer: TELEGRAM_ERROR_CHANNEL_LINK,
+        message: message,
+      })
+    );
   });
 
   app.listen(PORT, () => console.log(`Server running on port ${PORT}...`));
