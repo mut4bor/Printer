@@ -1,36 +1,17 @@
 import path from 'path';
 import express from 'express';
 import cors from 'cors';
-import {
-  SERVER_PORT,
-  TELEGRAM_ERROR_CHANNEL_LINK,
-  TELEGRAM_ERROR_SESSION,
-  TELEGRAM_PASSWORD,
-  TELEGRAM_PHONE_NUMBER,
-} from '@/config';
+import { SERVER_PORT, TELEGRAM_ERROR_SESSION } from '@/config';
 import { listenToChannel } from '@/listenToChannel';
 import { readImage } from '@/readImage';
 import { makeBet } from '@/makeBet';
 import { StringSession } from 'telegram/sessions';
 import { createTelegramClient } from './createTelegramClient';
-import { Api } from 'telegram';
-import { CustomFile } from 'telegram/client/uploads';
 import fs from 'fs';
+import { saveBase64ToFile } from './saveBase64ToFile';
+import { sendMedia } from './sendMedia';
 
-async function saveBase64ToFile(base64: string, filepath: string) {
-  return new Promise((resolve, reject) => {
-    const buffer = Buffer.from(base64, 'base64');
-    fs.writeFile(filepath, buffer, (err) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(filepath);
-      }
-    });
-  });
-}
-
-async function startServer() {
+const startServer = async () => {
   const app = express();
   const PORT = SERVER_PORT || 3000;
   const __publicPath = path.join(__dirname, '../', 'public');
@@ -59,26 +40,16 @@ async function startServer() {
 
     await saveBase64ToFile(screenshot, filePath);
 
-    await client.invoke(
-      new Api.messages.SendMedia({
-        peer: TELEGRAM_ERROR_CHANNEL_LINK,
-        media: new Api.InputMediaUploadedPhoto({
-          file: await client.uploadFile({
-            file: new CustomFile(
-              filePath,
-              fs.statSync(filePath).size,
-              filePath
-            ),
-            workers: 1,
-          }),
-        }),
-        message: message,
-      })
-    );
+    await sendMedia({
+      client,
+      filePath,
+      message,
+    });
+
     fs.unlinkSync(filePath);
   });
 
   app.listen(PORT, () => console.log(`Server running on port ${PORT}...`));
-}
+};
 
 startServer();

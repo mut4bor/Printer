@@ -1,11 +1,6 @@
 import dotenv from 'dotenv';
 dotenv.config({ path: '.env.local' });
 
-/**
- * Getting env-variable
- * @throwable
- */
-
 const getEnvVar = (key: string) => {
   if (process.env[key] === undefined) {
     throw new Error(`Env variable ${key} is required`);
