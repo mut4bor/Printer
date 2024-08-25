@@ -1,7 +1,7 @@
 import path from 'path';
 import express from 'express';
 import cors from 'cors';
-import { SERVER_PORT, TELEGRAM_ERROR_SESSION } from '@/config';
+import { SERVER_PORT, TELEGRAM_LOG_SESSION } from '@/config';
 import { listenToChannel } from '@/listenToChannel';
 import { readImage } from '@/readImage';
 import { makeBet } from '@/makeBet';
@@ -24,7 +24,7 @@ const startServer = async () => {
     res.sendFile(path.join(__publicPath, 'index.html'));
   });
 
-  const stringSession = new StringSession(TELEGRAM_ERROR_SESSION);
+  const stringSession = new StringSession(TELEGRAM_LOG_SESSION);
   const { client } = createTelegramClient(stringSession);
 
   const filePath = './temp_image.jpg';

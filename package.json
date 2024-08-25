@@ -9,7 +9,7 @@
     "dev": "nodemon"
   },
   "keywords": [],
-  "author": "",
+  "author": "Matvey Molchanov",
   "license": "ISC",
   "dependencies": {
     "@types/cors": "^2.8.17",

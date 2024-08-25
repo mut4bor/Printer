@@ -1,5 +1,5 @@
 import { Api, TelegramClient } from 'telegram';
-import { TELEGRAM_ERROR_CHANNEL_LINK } from '@/config';
+import { TELEGRAM_LOG_CHANNEL_LINK } from '@/config';
 import fs from 'fs';
 import { CustomFile } from 'telegram/client/uploads';
 
@@ -14,7 +14,7 @@ export const sendMedia = async ({
 }) => {
   await client.invoke(
     new Api.messages.SendMedia({
-      peer: TELEGRAM_ERROR_CHANNEL_LINK,
+      peer: TELEGRAM_LOG_CHANNEL_LINK,
       media: new Api.InputMediaUploadedPhoto({
         file: await client.uploadFile({
           file: new CustomFile(filePath, fs.statSync(filePath).size, filePath),
